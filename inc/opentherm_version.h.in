@@ -1,0 +1,13 @@
+/*
+ * VERSION AUTO INFO
+ */
+
+#ifndef OPENTHERM_VERSION_H
+#define OPENTHERM_VERSION_H
+
+#define opentherm_VERSION_MAJOR @opentherm_VERSION_MAJOR@
+#define opentherm_VERSION_MINOR @opentherm_VERSION_MINOR@
+#define opentherm_VERSION_PATCH @opentherm_VERSION_PATCH@
+
+
+#endif // OPENTHERM_VERSION_H
