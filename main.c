@@ -1,30 +1,29 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "config.h"
 #include "opentherm.h"
-#include "opentherm_test.h"
+#include "opentherm_master.h"
+#include "opentherm_slave.h"
 
-const char *ErrMsgs[] = {
-    "resOK\0",
-    "resBadMsgId\0",
-    "resNoAnswer\0",
-    "resBadArg\0",
-    "resParityErr\0",
-    "resBadMsgType\0",
-    "resNoMVorSPS\0",
-    "???\0"
-};
+
+#include "opentherm_test.h"
 
 int main()
 {
-    printf("opentherm version %d.%d.%d\n", opentherm_VERSION_MAJOR, opentherm_VERSION_MINOR, opentherm_VERSION_PATCH);
+	printf("opentherm version %d.%d.%d\n", opentherm_VERSION_MAJOR,
+	       opentherm_VERSION_MINOR, opentherm_VERSION_PATCH);
 
-    if ( OPENTHERM_InitMV(&MV_array , MsgTblLength) != 0) {
-        printf("OPENTHERM_InitMV() error!\n");
-    };
-    run_opentherm_test();
+	if (OPENTHERM_InitMaster() != OPENTHERM_ResOK) {
+		printf("OPENTHERM_InitMaster failed!\n");
+		exit(-1);
+	}
+	if (OPENTHERM_InitSlave() != OPENTHERM_ResOK) {
+		printf("OPENTHERM_InitSlave failed!\n");
+		exit(-1);
+	}
 
+	run_opentherm_test();
 
-
-    return 0;
+	return 0;
 }

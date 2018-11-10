@@ -1,155 +1,153 @@
 /**
-  ******************************************************************************
-  * @file    test.c
-  * @author  turchenkov@gmail.com
-  * @version V0.0.1
-  * @date    07-Nov-2018
-  * @brief   This file contains test routines for opentherm.c
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    test.c
+ * @author  turchenkov@gmail.com
+ * @version V0.0.1
+ * @date    07-Nov-2018
+ * @brief   This file contains test routines for opentherm.c
+ ******************************************************************************
+ */
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
-#include    "config.h"
+#include "config.h"
 
-#include "opentherm.h"
-#include "opentherm_test.h"
-#include "opentherm_daq_def.h"
+#include <unistd.h>
+
 #include "assert.h"
+#include "opentherm_data_def.h"
+#include "opentherm.h"
+#include "message_table.h"
+#include "opentherm_daq_def.h"
+#include "opentherm_test.h"
 
 static void f88ToFloat_test(void);
-static void OPENTHERM_SerializeMsg_test(void);
+static void getTime_test(void);
+static void OPENTHERM_PutDataToMsg_test(void);
 
-static const char *ErrMsgs[] = {
-    "resOK\0",
-    "resBadMsgId\0",
-    "resNoAnswer\0",
-    "resBadArg\0",
-    "resParityErr\0",
-    "resBadMsgType\0",
-    "resNoMVorSPS\0",
-    "???\0"
-};
+static const char *ErrMsgs[] = { "resOK\0",	"resBadMsgId\0",
+				 "resNoAnswer\0",  "resBadArg\0",
+				 "resParityErr\0", "resBadMsgType\0",
+				 "resNoMVorSPS\0", "???\0" };
 
+void run_opentherm_test(void)
+{
+	printf("%s\n", "opentherm_test started...");
 
+	f88ToFloat_test();
+	getTime_test();
+	OPENTHERM_PutDataToMsg_test();
 
-void run_opentherm_test(void) {
-    printf("%s\n", "opentherm_test started...");
-
-    f88ToFloat_test();
-
-    // serialize message
-    OPENTHERM_SerializeMsg_test();
-
-    printf("%s\n", "opentherm_test finished...");
+	printf("%s\n", "opentherm_test finished...");
 }
 
+/**
+ * @brief f88ToFloat_test
+ */
+static void f88ToFloat_test(void)
+{
+	for (size_t ipart = 0; ipart < 0x100; ipart++) {
+		for (size_t fpart = 0; fpart < 0x100; fpart++) {
+			f88_t arg = { ipart, fpart };
+			f88_t ans = FloatTof88(F88ToFloat(arg));
 
-static void f88ToFloat_test(void) {
-//    f88_t   one = {0x15, 0x80};
-//    float   oneAnswer = 21.5f;
-//    f88_t   two = {0xFA, 0xC0};
-//    float  twoAnswer = -5.25f;
-//    if (f88ToFloat(one) == oneAnswer) {
-//        printf("%f == %f\n", f88ToFloat(one), oneAnswer);
-//    }
-
-//    if (f88ToFloat(two) == twoAnswer) {
-//        printf("%f == %f\n", f88ToFloat(two), twoAnswer);
-//    }
-
-//    f88_t   t = {0x80, 0x00};
-//    printf("%f\n", f88ToFloat(t));
-//    f88_t t_o = FloatTof88(f88ToFloat(t));
-//    printf("given        : %02X : %02X\n", t.int_part, t.frac_part);
-//    printf("converted to: %02X : %02X\n", t_o.int_part, t_o.frac_part);
-
-
-
-//    f88_t   t1 = {0x7f, 0xff};
-//    printf("%f\n", f88ToFloat(t1));
-
-//    f88_t t1_o = FloatTof88(f88ToFloat(t1));
-//    printf("given        : %02X : %02X\n", t1.int_part, t1.frac_part);
-//    printf("converted to: %02X : %02X\n", t1_o.int_part, t1_o.frac_part);
-
-
-    for (size_t ipart = 0; ipart < 0x100; ipart++) {
-        for (size_t fpart = 0; fpart < 0x100; fpart++) {
-            f88_t arg = {ipart, fpart};
-            f88_t ans = FloatTof88(f88ToFloat(arg));
-
-            if ( (arg.int_part != ans.int_part) || (arg.frac_part != ans.frac_part) ) {
-                printf("%s", "Error\n\0");
-                printf("given        : %02X : %02X\n", arg.int_part, arg.frac_part);
-                printf("converted to: %02X : %02X\n", ans.int_part, ans.frac_part);
-            }
-        }
-    }
-
-
+			if ((arg.int_part != ans.int_part) ||
+			    (arg.frac_part != ans.frac_part)) {
+				printf("%s", "Error\n\0");
+				printf("given        : %02X : %02X\n",
+				       arg.int_part, arg.frac_part);
+				printf("converted to: %02X : %02X\n",
+				       ans.int_part, ans.frac_part);
+			}
+		}
+	}
 }
 
-static void OPENTHERM_SerializeMsg_test(void) {
+/**
+ * @brief getTime_test
+ */
+static void getTime_test(void)
+{
+	tTime t0;
+	tTime t1;
+	printf("%s\n", "getTime_test started...");
 
-    printf("\nOPENTHERM_SerializeMsg_test started..\n");
+	t0 = getTime();
+	printf("t0 = %d.%d\n", t0.Seconds, t0.mSeconds);
+	sleep(1u);
+	t1 = getTime();
+	printf("t1 = %d.%d\n", t1.Seconds, t1.mSeconds);
 
-    uint8_t     msgType = MSG_TYPE_READ_ACK;
-    uint32_t    message;
+	printf("%s\n", "getTime_test finished...");
+}
 
-    for (size_t i = 0; i < MsgTblLength; i++) {
+/**
+ * @brief OPENTHERM_PutDataToMsg_test
+ */
+static void OPENTHERM_PutDataToMsg_test()
+{
+	static tMV Master_MV_array[MV_ARRAY_LENGTH];
+	static tMV(*const pMaster_MV_array)[MV_ARRAY_LENGTH] = &Master_MV_array;
 
-        const opentThermMsg_t * pTableEntry = GetMessageTblEntry(MV_array[i].LD_ID);
-        if (pTableEntry == NULL) {
-            printf("Test failed at Serialization step %d with error: pTableEntry == NULL \n", i);
-            continue;
-        }
-        switch (pTableEntry->msgDataType1) {
-            case u8:
-            case fl8:
-            case u16:
-            case none:
-                MV_array[i].Val.iVal = (int32_t)i;
-                break;
-            case s8:
-            case s16:
-                MV_array[i].Val.iVal = (int32_t)i;
-                break;
-            case f88:
-                MV_array[i].Val.fVal = ((float)i + (float)i / 100.0f);
-                break;
-        }
+	static tMV Slave_MV_array[MV_ARRAY_LENGTH];
+	static tMV(*const pSlave_MV_array)[MV_ARRAY_LENGTH] = &Slave_MV_array;
 
-        openThermResult_t r = OPENTHERM_SerializeMsg(&message, &(MV_array[i]), msgType);
+	printf("%s\n", ">>>>>>>>> OPENTHERM_PutDataToMsg_test started...");
 
-        if (r != resOK) {
-            printf("Test failed at Serialization step %d with error %s\n", i, ErrMsgs[r]);
-        }
+	if (OPENTHERM_InitMV(pMaster_MV_array, MV_ARRAY_LENGTH) != 0) {
+		printf("Test failed at %s, %s!\n", __FILE__, __FILE__);
+		return;
+	}
 
-        int32_t ival = MV_array[i].Val.iVal;
-        float   fval = MV_array[i].Val.fVal;
+	if (OPENTHERM_InitMV(pSlave_MV_array, MV_ARRAY_LENGTH) != 0) {
+		printf("Test failed at %s, %s!\n", __FILE__, __FILE__);
+		return;
+	}
 
-        r = OPENTHERM_DeserializeMsg(message, &MV_array , MsgTblLength);
+	/* fill master MV table */
+	for (size_t i = 0; i < MV_ARRAY_LENGTH; i++) {
+		printf("\ttest msgId = %d\n", Master_MV_array[i].LD_ID);
 
-        if (r != resOK) {
-            printf("Test failed at Deserialization step %d with error %s\n", i, ErrMsgs[r]);
-        }
+		if (Master_MV_array[i].MV_type == intMV) {
+			Master_MV_array[i].Val.iVal = (int32_t)i;
+		} else {
+			Master_MV_array[i].Val.fVal =
+				(float)i + (float)i / 100.0f;
+		}
 
-        int rr = 0;
-        if (MV_array[i].MV_type == intMV) {
-            if (MV_array[i].Val.iVal != ival) {
-                rr = -1;
-            }
-        } else {
-            if ( fabs(MV_array[i].Val.fVal - fval) > 0.005 ) {
-                rr = -1;
-            }
-        }
+		uint32_t message;
+		openThermResult_t res1 =
+			OPENTHERM_PutDataToMsg(&(Master_MV_array[i]), &message);
+		if (res1 != OPENTHERM_ResOK) {
+			printf("Test failed at %s, %s! (i = %d)\n", __FILE__,
+			       __FILE__, i);
+			return;
+		}
+		res1 = OPENTHERM_SaveToMV(&(Slave_MV_array[i]), &message);
+		if (res1 != OPENTHERM_ResOK) {
+			printf("Test failed at %s, %s! (i = %d)\n", __FILE__,
+			       __FILE__, i);
+			return;
+		}
 
-        if ( rr == -1 ) {
-            printf("Test failed at Deserialization step %d (msgId = %d) with error: wrong MV_array[i].Val\n", i, pTableEntry->msgId);
-            printf("\tMV_array[i].Val.fVal = %f , deserialized to  %f \n\n", fval, MV_array[i].Val.fVal);
-        }
-    }
+		/*compare two MVs */
+		int errflag = 0;
+		if (Master_MV_array[i].MV_type == intMV) {
+			errflag = (Master_MV_array[i].Val.iVal ==
+				   Slave_MV_array[i].Val.iVal) ?
+					  0 :
+					  -1;
+		} else {
+			errflag = (fabs(Master_MV_array[i].Val.fVal -
+					Slave_MV_array[i].Val.fVal) < 0.01f) ?
+					  0 :
+					  -1;
+		}
+		if (errflag != 0) {
+			printf("Test failed at %s, %s! (i = %d)\n", __FILE__,
+			       __FILE__, i);
+			return;
+		}
+	}
 }

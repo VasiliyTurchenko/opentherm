@@ -6,7 +6,7 @@ message(${CMAKE_CURRENT_SOURCE_DIR})
 # The version number.
 set (opentherm_VERSION_MAJOR 0)
 set (opentherm_VERSION_MINOR 0)
-set (opentherm_VERSION_PATCH 2)
+set (opentherm_VERSION_PATCH 3)
 
 set(HEADER_FILES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 message(${HEADER_FILES_DIR})
@@ -30,14 +30,12 @@ configure_file(
 include_directories(${HEADER_FILES_DIR})
 
 add_executable(${PROJECT_NAME} main.c
-#	                        ${HEADER_FILES_DIR}/opentherm.h
-                                opentherm.c
-#				${HEADER_FILES_DIR}/opentherm_json.h
-                                opentherm_json.c
-#				${HEADER_FILES_DIR}/opentherm_daq_def.h
-#				${HEADER_FILES_DIR}/opentherm_test.h
-                                opentherm_test.c
-#				${HEADER_FILES_DIR}/opentherm_simulator.h
-                                opentherm_simulator.c)
+	                        opentherm.c
+				opentherm_json.c
+				opentherm_test.c
+#				opentherm_simulator.c
+                                message_table.c
+				opentherm_master.c
+				opentherm_slave.c)
 target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_FILES_DIR})
 
