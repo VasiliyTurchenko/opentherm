@@ -22,7 +22,7 @@
 
 
 /**
-  * initializes the MV array
+  * @brief initializes the MV array by the data from MessageTable
   * @param pmv the pointer to MV array
   * @param pMVArrLen lenthth of the array
   * @return -1 if error, 0 otherwize
@@ -45,7 +45,8 @@ int32_t OPENTHERM_InitMV(tMV (*const pMVArr)[], size_t MVArrLen)
 		p->Ctrl = No;
 		p->ValChanged = Yes;
 		p->TimeStamp = getTime();
-		p->Quality = QUALITY_VALIDITY_QUESTIONABLE;
+	/* QUALITY_VALIDITY_GOOD - not correct */
+		p->Quality = QUALITY_VALIDITY_GOOD;
 		if (messagesTbl[i].msgDataType1 == f88) {
 			p->MV_type = floatMV;
 			p->Val.fVal = 0.0;
@@ -202,6 +203,9 @@ openThermResult_t OPENTHERM_PutDataToMsg(tMV *const pMV, uint32_t *const pmsg)
 	} else {
 		outFrame->dataVal.dataValueF88 = FloatTof88(pMV->Val.fVal);
 	}
+	if (pMV->Quality != QUALITY_VALIDITY_GOOD) {
+		retVal = OPENTHERM_ResDataInvalid;
+	}
 fExit:
 	return retVal;
 }
@@ -243,14 +247,14 @@ openThermResult_t OPENTHERM_SaveToMV(tMV *const pMV, uint32_t *const pmsg)
 		break;
 	case s16:
 		oldIVal = pMV->Val.iVal;
-		pMV->Val.iVal = (int32_t)frame->dataVal.dataValueS16;
+		pMV->Val.iVal = (int16_t)frame->dataVal.dataValueS16;
 		break;
 	case u8:
 	case s8:
 	case fl8:
 	case u16:
 		oldIVal = pMV->Val.iVal;
-		pMV->Val.iVal = (int32_t)frame->dataVal.dataValueU16;
+		pMV->Val.iVal = (int16_t)frame->dataVal.dataValueU16;
 		break;
 	default:
 		retVal = OPENTHERM_ResBadArg;
@@ -273,20 +277,22 @@ openThermResult_t OPENTHERM_SaveToMV(tMV *const pMV, uint32_t *const pmsg)
 
 		/* check ranges */
 		if (pMV->MV_type == floatMV) {
-			if ((pMV->Val.fVal >= pMV->Lowest.fVal) &&
-			    (pMV->Val.fVal <= pMV->Highest.fVal)) {
+			if ( (pMV->Val.fVal >= pMV->Lowest.fVal) &&
+			    (pMV->Val.fVal <= pMV->Highest.fVal) ) {
 				pMV->Quality = QUALITY_VALIDITY_GOOD;
 			} else {
 				pMV->Quality = (QUALITY_VALIDITY_INVALID |
 						QUALITY_DETAIL_OUT_OF_RANGE);
+				retVal = OPENTHERM_ResDataInvalid;
 			}
 		} else {
-			if ((pMV->Val.iVal >= pMV->Lowest.iVal) &&
-			    (pMV->Val.iVal <= pMV->Highest.iVal)) {
+			if ( (pMV->Val.iVal >= pMV->Lowest.iVal) &&
+			    (pMV->Val.iVal <= pMV->Highest.iVal) ) {
 				pMV->Quality = QUALITY_VALIDITY_GOOD;
 			} else {
 				pMV->Quality = (QUALITY_VALIDITY_INVALID |
 						QUALITY_DETAIL_OUT_OF_RANGE);
+				retVal = OPENTHERM_ResDataInvalid;
 			}
 		}
 	}

@@ -32,7 +32,8 @@ static tMV (*const ptMV_array)[MV_ARRAY_LENGTH] = &MV_array;
  * @brief InitSlave
  * @return openThermResult_t
  */
-openThermResult_t OPENTHERM_InitSlave() {
+openThermResult_t OPENTHERM_InitSlave()
+{
 	if (OPENTHERM_InitMV(ptMV_array, (size_t)MV_ARRAY_LENGTH) != 0) {
 		return OPENTHERM_ResNoMVorSPS;
 	} else {
@@ -48,8 +49,8 @@ openThermResult_t OPENTHERM_InitSlave() {
   * @return openThermResult_t
   */
 openThermResult_t OPENTHERM_SlaveRespond(uint32_t msg,
-				      uint32_t (*commFun)(uint32_t),
-				      tMV* (*GetMV)(uint8_t))
+					 uint32_t (*commFun)(uint32_t),
+					 tMV *(*GetMV)(uint8_t))
 {
 	openThermResult_t retVal = OPENTHERM_ResOK;
 	/* check parity */
@@ -64,6 +65,9 @@ openThermResult_t OPENTHERM_SlaveRespond(uint32_t msg,
 	 * MsgType WRITE-DATA -> WRITE-ACK || DATA-INVALID || UNKNOWN-DATAID
 	 */
 	openThermFrame_t *p = (openThermFrame_t *)&msg;
+
+	p->byte1.parity =0u;
+
 	if (!((p->byte1.msgType == MSG_TYPE_READ_DATA) ||
 	      (p->byte1.msgType == MSG_TYPE_WRITE_DATA))) {
 		/* nothing to do */
@@ -72,22 +76,28 @@ openThermResult_t OPENTHERM_SlaveRespond(uint32_t msg,
 	}
 
 	/* find the appropriate MV */
-	tMV * pMV = GetMV(p->dataID);
-	if (pMV == NULL) {
-		retVal = OPENTHERM_ResBadMsgId;
-		goto fExit;
-	}
-
-	if (p->byte1.msgType == MSG_TYPE_READ_DATA) {
-		OPENTHERM_PutDataToMsg(pMV, &msg);
-		p->byte1.msgType = MSG_TYPE_READ_ACK;
-
+	tMV *pMV = GetMV(p->dataID);
+	if (pMV != NULL) {
+		if (p->byte1.msgType == MSG_TYPE_READ_DATA) {
+			retVal = OPENTHERM_PutDataToMsg(pMV, &msg);
+			if (retVal == OPENTHERM_ResDataInvalid) {
+				p->byte1.msgType = MSG_TYPE_DATA_INVALID;
+			} else {
+				p->byte1.msgType = MSG_TYPE_READ_ACK;
+			}
+		} else {
+			/* MSG_TYPE_WRITE_DATA */
+			retVal = OPENTHERM_SaveToMV(pMV, &msg);
+			if (retVal == OPENTHERM_ResDataInvalid) {
+				p->byte1.msgType = MSG_TYPE_DATA_INVALID;
+			} else {
+				p->byte1.msgType = MSG_TYPE_WRITE_ACK;
+			}
+		}
 	} else {
-		/* MSG_TYPE_WRITE_DATA */
-		OPENTHERM_SaveToMV(pMV, &msg);
-		p->byte1.msgType = MSG_TYPE_WRITE_ACK;
+		retVal = OPENTHERM_ResBadMsgId;
+		p->dataVal.dataValueU16 = 0u;
 	}
-
 	/* set correct parity bit */
 	if (CheckParity32(msg) != 0) {
 		p->byte1.parity = 1u;
@@ -97,4 +107,3 @@ openThermResult_t OPENTHERM_SlaveRespond(uint32_t msg,
 fExit:
 	return retVal;
 }
-
