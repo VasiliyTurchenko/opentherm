@@ -38,7 +38,7 @@ int32_t OPENTHERM_InitMV(tMV (*const pMVArr)[], size_t MVArrLen)
 	}
 
 	size_t MVindex = 0u;
-	for (size_t msgcount = 0u; msgcount < MSG_TBL_LENGTH; msgcount++) {
+	for (size_t msgcount = 0u; msgcount < (size_t)MSG_TBL_LENGTH; msgcount++) {
 		tMV *p = &(*pMVArr)[MVindex];
 		p->LD_ID = messagesTbl[msgcount].msgId;
 
@@ -156,10 +156,10 @@ float F88ToFloat(f88_t val)
 {
 	float retVal;
 // clang-format off
-	if (val.int_part & 0x80u) {
+	if ((val.int_part & 0x80u) != 0u) {
 		retVal = (float)( -(0x10000 - ( ((uint16_t)(val.int_part) << 8) + val.frac_part) ) / 256.0f );
 	} else {
-		retVal = (float)(             ( ((uint16_t)(val.int_part) << 8) +  val.frac_part ) / 256.0f );
+		retVal = (float)(             ( ((uint16_t)(val.int_part) << 8) + val.frac_part  ) / 256.0f );
 	}
 // clang-format on
 	return retVal;

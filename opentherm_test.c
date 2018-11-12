@@ -56,6 +56,9 @@ static void OPENTHERM_WriteOnlyTest(void);
 /* auxiliary functions */
 void PrintMVInfo(tMV *const pMV);
 
+void __attribute__((noreturn))
+diagPrintAndExit(char *testname, int line, char *file, int errcode);
+
 /* static data */
 static tMV Master_MV_array[MV_ARRAY_LENGTH];
 static tMV (*const pMaster_MV_array)[MV_ARRAY_LENGTH] = &Master_MV_array;
@@ -64,7 +67,6 @@ static tMV Slave_MV_array[MV_ARRAY_LENGTH];
 static tMV (*const pSlave_MV_array)[MV_ARRAY_LENGTH] = &Slave_MV_array;
 
 /************** TESTS *******************************/
-
 /**
  * @brief run_opentherm_test
  */
@@ -134,14 +136,13 @@ static void getTime_test(void)
  */
 static void OPENTHERM_PutDataToMsg_Errors_test()
 {
-	printf("%s\n",
-	       ">>>>>>>>> OPENTHERM_PutDataToMsg_Errors_test started...");
+	char *testName = "OPENTHERM_PutDataToMsg_Errors_test";
+	printf(">>>>>>>>> %s started...\n", testName);
 
 	tMV Master_MV_array[MV_ARRAY_LENGTH];
 	tMV(*const pMaster_MV_array)[MV_ARRAY_LENGTH] = &Master_MV_array;
 	if (OPENTHERM_InitMV(pMaster_MV_array, MV_ARRAY_LENGTH) != 0) {
-		printf("Test failed at %s: %d!\n", __FILE__, __LINE__);
-		return;
+		diagPrintAndExit(testName, __LINE__, __FILE__, 0);
 	}
 
 	tMV badMV;
@@ -149,18 +150,15 @@ static void OPENTHERM_PutDataToMsg_Errors_test()
 	uint32_t message;
 
 	if (OPENTHERM_PutDataToMsg(&badMV, NULL) != OPENTHERM_ResNullPtr) {
-		printf("Test failed at %s: %d! \n", __FILE__, __LINE__);
-		return;
+		diagPrintAndExit(testName, __LINE__, __FILE__, 0);
 	}
 	if (OPENTHERM_PutDataToMsg(NULL, &message) != OPENTHERM_ResNullPtr) {
-		printf("Test failed at %s: %d! \n", __FILE__, __LINE__);
-		return;
+		diagPrintAndExit(testName, __LINE__, __FILE__, 0);
 	}
 
 	badMV.LD_ID = Master_MV_array[MV_ARRAY_LENGTH - 1].LD_ID + 1u;
 	if (OPENTHERM_PutDataToMsg(&badMV, &message) != OPENTHERM_ResBadMsgId) {
-		printf("Test failed at %s: %d! \n", __FILE__, __LINE__);
-		return;
+		diagPrintAndExit(testName, __LINE__, __FILE__, 0);
 	}
 }
 
@@ -169,14 +167,13 @@ static void OPENTHERM_PutDataToMsg_Errors_test()
  */
 static void OPENTHERM_OPENTHERM_SaveToMV_Errors_test()
 {
-	printf("%s\n",
-	       ">>>>>>>>> OPENTHERM_OPENTHERM_SaveToMV_Errors_test started...");
+	char *testName = "OPENTHERM_OPENTHERM_SaveToMV_Errors_test";
+	printf(">>>>>>>>> %s started...\n", testName);
 
 	tMV Master_MV_array[MV_ARRAY_LENGTH];
 	tMV(*const pMaster_MV_array)[MV_ARRAY_LENGTH] = &Master_MV_array;
 	if (OPENTHERM_InitMV(pMaster_MV_array, MV_ARRAY_LENGTH) != 0) {
-		printf("Test failed at %s: %d!\n", __FILE__, __LINE__);
-		return;
+		diagPrintAndExit(testName, __LINE__, __FILE__, 0);
 	}
 
 	tMV badMV;
@@ -184,18 +181,15 @@ static void OPENTHERM_OPENTHERM_SaveToMV_Errors_test()
 	uint32_t message;
 
 	if (OPENTHERM_SaveToMV(&badMV, NULL) != OPENTHERM_ResNullPtr) {
-		printf("Test failed at %s: %d! \n", __FILE__, __LINE__);
-		return;
+		diagPrintAndExit(testName, __LINE__, __FILE__, 0);
 	}
 	if (OPENTHERM_SaveToMV(NULL, &message) != OPENTHERM_ResNullPtr) {
-		printf("Test failed at %s: %d! \n", __FILE__, __LINE__);
-		return;
+		diagPrintAndExit(testName, __LINE__, __FILE__, 0);
 	}
 
 	badMV.LD_ID = Master_MV_array[MV_ARRAY_LENGTH - 1].LD_ID + 1u;
 	if (OPENTHERM_SaveToMV(&badMV, &message) != OPENTHERM_ResNoMVorSPS) {
-		printf("Test failed at %s: %d! \n", __FILE__, __LINE__);
-		return;
+		diagPrintAndExit(testName, __LINE__, __FILE__, 0);
 	}
 }
 
@@ -322,8 +316,8 @@ static void OPENTHERM_PutDataToMsg_test()
  */
 static void OPENTHERM_WriteSlave_ReadSlave_Test(void)
 {
-	printf("%s\n",
-	       ">>>>>>>>> OPENTHERM_WriteSlave_ReadSlave_Test started...");
+	char *testName = "OPENTHERM_WriteSlave_ReadSlave_Test";
+	printf(">>>>>>>>> %s started...\n", testName);
 
 	init_MVArrays();
 
@@ -381,8 +375,8 @@ static void OPENTHERM_WriteSlave_ReadSlave_Test(void)
  */
 static void OPENTHERM_ReadOnlyTest(void)
 {
-	printf("%s\n",
-	       ">>>>>>>>> OPENTHERM_ReadOnlyTest started...");
+	char *testName = "OPENTHERM_ReadOnlyTest";
+	printf(">>>>>>>>> %s started...\n", testName);
 
 	init_MVArrays();
 	/* test all the msgIds which are read-only */
@@ -418,21 +412,21 @@ static void OPENTHERM_ReadOnlyTest(void)
 		       messagesTbl[i].msgId);
 		if (messagesTbl[i].msgDataType1 == f88) {
 			pMV_slave->Val.fVal = messagesTbl[i].Lowest_MV1.fVal +
-					(messagesTbl[i].Highest_MV1.fVal -
-					 messagesTbl[i].Lowest_MV1.fVal) /
-						2.0f;
-			printf(".fVal = %f\n", pMV_slave->Val.fVal);
+					      (messagesTbl[i].Highest_MV1.fVal -
+					       messagesTbl[i].Lowest_MV1.fVal) /
+						      2.0f;
+			printf(".fVal = %f\n", (double)pMV_slave->Val.fVal);
 		} else {
 			pMV_slave->Val.iVal = messagesTbl[i].Lowest_MV1.iVal +
-					(messagesTbl[i].Highest_MV1.iVal -
-					 messagesTbl[i].Lowest_MV1.iVal) /
-						2;
+					      (messagesTbl[i].Highest_MV1.iVal -
+					       messagesTbl[i].Lowest_MV1.iVal) /
+						      2;
 			printf(".iVal = %d\n", pMV_slave->Val.iVal);
 		}
 		if (use2MVs == 2u) {
 			if (messagesTbl[i].msgDataType2 == f88) {
-				printf("Test failed at %s: %d!\n", __FILE__,
-				       __LINE__);
+				diagPrintAndExit(testName, __LINE__, __FILE__,
+						 0);
 			} else {
 				pMV2_slave->Val.iVal =
 					messagesTbl[i].Lowest_MV2.iVal +
@@ -448,15 +442,17 @@ static void OPENTHERM_ReadOnlyTest(void)
 		openThermResult_t readSlaveRes;
 		readSlaveRes = OPENTHERM_ReadSlave(pMV_master, Master_CommFun);
 		if (readSlaveRes != OPENTHERM_ResOK) {
-			printf("Test failed at %s: %d!\n", __FILE__, __LINE__);
-			printf("Error code %d\n", readSlaveRes);
-			exit(-1);
+			diagPrintAndExit(testName, __LINE__, __FILE__,
+					 (int)readSlaveRes);
 		}
+
 		/* check results */
 		int diff1 = 0;
 
 		if (pMV_slave->MV_type == intMV) {
-			diff1 = (pMV_slave->Val.iVal != pMV_master->Val.iVal) ? 1 : 0;
+			diff1 = (pMV_slave->Val.iVal != pMV_master->Val.iVal) ?
+					1 :
+					0;
 		} else {
 			diff1 = (fabs((double)pMV_slave->Val.fVal -
 				      (double)pMV_master->Val.fVal) > 0.05) ?
@@ -468,10 +464,12 @@ static void OPENTHERM_ReadOnlyTest(void)
 			       messagesTbl[i].msgId, __FILE__, __LINE__);
 			if (pMV_slave->MV_type == intMV) {
 				printf("diff.iVal = %d\n",
-				       (pMV_slave->Val.iVal - pMV_master->Val.iVal));
+				       (pMV_slave->Val.iVal -
+					pMV_master->Val.iVal));
 			} else {
 				printf("diff.fVal = %f\n",
-				       (pMV_slave->Val.fVal - pMV_master->Val.fVal));
+				       (pMV_slave->Val.fVal -
+					pMV_master->Val.fVal));
 			}
 
 			exit(-1);
@@ -519,9 +517,10 @@ static void OPENTHERM_ReadOnlyTest(void)
 /**
  * @brief OPENTHERM_WriteOnlyTest
  */
-static void OPENTHERM_WriteOnlyTest(void) {
-	printf("%s\n",
-	       ">>>>>>>>> OPENTHERM_WriteOnlyTest started...");
+static void OPENTHERM_WriteOnlyTest(void)
+{
+	char *testName = "OPENTHERM_WriteOnlyTest";
+	printf(">>>>>>>>> %s started...\n", testName);
 
 	init_MVArrays();
 	/* test all the msgIds which are write-only */
@@ -556,16 +555,18 @@ static void OPENTHERM_WriteOnlyTest(void) {
 		printf("testing write-only msgId %d with testVal",
 		       messagesTbl[i].msgId);
 		if (messagesTbl[i].msgDataType1 == f88) {
-			pMV_master->Val.fVal = messagesTbl[i].Lowest_MV1.fVal +
-					(messagesTbl[i].Highest_MV1.fVal -
-					 messagesTbl[i].Lowest_MV1.fVal) /
-						2.0f;
+			pMV_master->Val.fVal =
+				messagesTbl[i].Lowest_MV1.fVal +
+				(messagesTbl[i].Highest_MV1.fVal -
+				 messagesTbl[i].Lowest_MV1.fVal) /
+					2.0f;
 			printf(".fVal = %f\n", pMV_master->Val.fVal);
 		} else {
-			pMV_master->Val.iVal = messagesTbl[i].Lowest_MV1.iVal +
-					(messagesTbl[i].Highest_MV1.iVal -
-					 messagesTbl[i].Lowest_MV1.iVal) /
-						2;
+			pMV_master->Val.iVal =
+				messagesTbl[i].Lowest_MV1.iVal +
+				(messagesTbl[i].Highest_MV1.iVal -
+				 messagesTbl[i].Lowest_MV1.iVal) /
+					2;
 			printf(".iVal = %d\n", pMV_master->Val.iVal);
 		}
 		if (use2MVs == 2u) {
@@ -587,15 +588,16 @@ static void OPENTHERM_WriteOnlyTest(void) {
 		openThermResult_t writeSlaveRes;
 		writeSlaveRes = OPENTHERM_WriteSlave(pMV_slave, Master_CommFun);
 		if (writeSlaveRes != OPENTHERM_ResOK) {
-			printf("Test failed at %s: %d!\n", __FILE__, __LINE__);
-			printf("Error code %d\n", writeSlaveRes);
-			exit(-1);
+			diagPrintAndExit(testName, __LINE__, __FILE__,
+					 (int)writeSlaveRes);
 		}
 		/* check results */
 		int diff1 = 0;
 
 		if (pMV_master->MV_type == intMV) {
-			diff1 = (pMV_master->Val.iVal != pMV_slave->Val.iVal) ? 1 : 0;
+			diff1 = (pMV_master->Val.iVal != pMV_slave->Val.iVal) ?
+					1 :
+					0;
 		} else {
 			diff1 = (fabs((double)pMV_master->Val.fVal -
 				      (double)pMV_slave->Val.fVal) > 0.05) ?
@@ -607,10 +609,12 @@ static void OPENTHERM_WriteOnlyTest(void) {
 			       messagesTbl[i].msgId, __FILE__, __LINE__);
 			if (pMV_master->MV_type == intMV) {
 				printf("diff.iVal = %d\n",
-				       (pMV_master->Val.iVal - pMV_slave->Val.iVal));
+				       (pMV_master->Val.iVal -
+					pMV_slave->Val.iVal));
 			} else {
 				printf("diff.fVal = %f\n",
-				       (pMV_master->Val.fVal - pMV_slave->Val.fVal));
+				       (pMV_master->Val.fVal -
+					pMV_slave->Val.fVal));
 			}
 
 			exit(-1);
@@ -642,7 +646,7 @@ static void OPENTHERM_WriteOnlyTest(void) {
 						pMV2_slave->Val.iVal));
 				} else {
 					printf("diff.fVal = %f\n",
-					       (pMV2_master->Val.fVal -
+					       (double)(pMV2_master->Val.fVal -
 						pMV2_slave->Val.fVal));
 				}
 
@@ -655,7 +659,6 @@ static void OPENTHERM_WriteOnlyTest(void) {
 	}
 }
 
-
 /**
  * @brief fullCircuitTest
  * @param MsgId	message Id to be tested
@@ -663,6 +666,7 @@ static void OPENTHERM_WriteOnlyTest(void) {
  */
 static void fullCircuitTest(uint8_t msgId, union MV_Val val, union MV_Val val2)
 {
+	char *testName = "";
 	tMV *pMV = NULL;
 	for (size_t i = 0; i < MV_ARRAY_LENGTH; i++) {
 		if (Master_MV_array[i].LD_ID == msgId) {
@@ -689,9 +693,7 @@ static void fullCircuitTest(uint8_t msgId, union MV_Val val, union MV_Val val2)
 	openThermResult_t masterRes;
 	masterRes = OPENTHERM_WriteSlave(pMV, Master_CommFun);
 	if (masterRes != OPENTHERM_ResOK) {
-		printf("Test failed at %s: %d!\n", __FILE__, __LINE__);
-		printf("Error code %d\n", masterRes);
-		exit(-1);
+		diagPrintAndExit(testName, __LINE__, __FILE__, (int)masterRes);
 	}
 
 	if (pMV->MV_type == intMV) {
@@ -703,9 +705,7 @@ static void fullCircuitTest(uint8_t msgId, union MV_Val val, union MV_Val val2)
 	openThermResult_t slaveRes;
 	slaveRes = OPENTHERM_ReadSlave(pMV, Master_CommFun);
 	if (slaveRes != OPENTHERM_ResOK) {
-		printf("Test failed at %s: %d!\n", __FILE__, __LINE__);
-		printf("Error code %d\n", slaveRes);
-		exit(-1);
+		diagPrintAndExit(testName, __LINE__, __FILE__, (int)masterRes);
 	}
 
 	int diff = 0;
@@ -724,7 +724,7 @@ static void fullCircuitTest(uint8_t msgId, union MV_Val val, union MV_Val val2)
 		if (pMV->MV_type == intMV) {
 			printf("diff.iVal = %d\n", (pMV->Val.iVal - val.iVal));
 		} else {
-			printf("diff.fVal = %f\n", (pMV->Val.fVal - val.fVal));
+			printf("diff.fVal = %f\n", (double)(pMV->Val.fVal - val.fVal));
 		}
 
 		exit(-1);
@@ -800,9 +800,7 @@ static uint32_t Master_CommFun(uint32_t message)
 		openThermResult_t slaveRes = OPENTHERM_SlaveRespond(
 			wire1, Master_CommFun, GetSlaveMV);
 		if (slaveRes != OPENTHERM_ResOK) {
-			printf("Test failed at %s: %d!\n", __FILE__, __LINE__);
-			printf("Error code %d\n", slaveRes);
-			exit(-1);
+			diagPrintAndExit("", __LINE__, __FILE__, (int)slaveRes);
 		}
 
 		if (cstate == commStateRelpyRcvd) {
@@ -826,4 +824,20 @@ static uint32_t Master_CommFun(uint32_t message)
 static void checkMVs(void)
 {
 	return;
+}
+
+/**
+ * @brief diagPrintAndExit
+ * @param testname
+ * @param line1
+ * @param line
+ * @param file
+ * @param errcode
+ */
+void __attribute__((noreturn))
+diagPrintAndExit(char *testname, int line, char *file, int errcode)
+{
+	printf("Test %s failed at %s:%d!  Error code = %d\n\n", testname, file,
+	       line, (int)errcode);
+	exit((int)errcode);
 }
