@@ -139,7 +139,7 @@ const opentThermMsg_t (*const pMessageTbl)[MSG_TBL_LENGTH] = &messagesTbl;
 const opentThermMsg_t *GetMessageTblEntry(const uint8_t msgId)
 {
 	size_t i;
-	for (i = 0u; i < MSG_TBL_LENGTH; i++) {
+	for (i = 0u; i < (size_t)MSG_TBL_LENGTH; i++) {
 		if (msgId == messagesTbl[i].msgId) {
 			return &(messagesTbl[i]);
 		}

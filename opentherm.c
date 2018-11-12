@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <time.h>
 #include "opentherm.h"
-#include "message_table.h"
+//#include "message_table.h"
 
 /* global variables */
 
@@ -33,12 +33,12 @@ openThermResult_t updateMVQualAndChg(tMV *const pMV, union MV_Val oldVal);
   */
 int32_t OPENTHERM_InitMV(tMV (*const pMVArr)[], size_t MVArrLen)
 {
-	if ((pMVArr == NULL) || (MVArrLen == 0)) {
+	if ((pMVArr == NULL) || (MVArrLen == 0u)) {
 		return -1;
 	}
 
 	size_t MVindex = 0u;
-	for (size_t msgcount = 0; msgcount < MSG_TBL_LENGTH; msgcount++) {
+	for (size_t msgcount = 0u; msgcount < MSG_TBL_LENGTH; msgcount++) {
 		tMV *p = &(*pMVArr)[MVindex];
 		p->LD_ID = messagesTbl[msgcount].msgId;
 
@@ -104,7 +104,7 @@ int32_t OPENTHERM_InitMV(tMV (*const pMVArr)[], size_t MVArrLen)
 void initFloatMVFields(tMV *p)
 {
 	p->MV_type = floatMV;
-	p->Val.fVal = 0.0;
+	p->Val.fVal = 0.0f;
 	p->MV_Shift.fVal = 0.0f;
 	p->MV_Scale.fVal = 1.0f;
 	p->MV_Aperture.fVal = 0.0f;
@@ -155,14 +155,13 @@ tTime getTime(void)
 float F88ToFloat(f88_t val)
 {
 	float retVal;
+// clang-format off
 	if (val.int_part & 0x80u) {
-		retVal = -(0x10000 -
-			   (((uint16_t)val.int_part << 8) + val.frac_part)) /
-			 256.0f;
+		retVal = (float)( -(0x10000 - ( ((uint16_t)(val.int_part) << 8) + val.frac_part) ) / 256.0f );
 	} else {
-		retVal = (((uint16_t)val.int_part << 8) + val.frac_part) /
-			 256.0f;
+		retVal = (float)(             ( ((uint16_t)(val.int_part) << 8) +  val.frac_part ) / 256.0f );
 	}
+// clang-format on
 	return retVal;
 }
 
@@ -177,8 +176,8 @@ f88_t FloatTof88(float val)
 	// saturation
 	val = (val > 127.996094f) ? 127.996094f : val;
 	val = (val < -128.000000f) ? -128.000000f : val;
-	int32_t a = (int32_t)(val * 256);
-	retVal.int_part = (uint8_t)(a >> 8u);
+	int32_t a = (int32_t)(val * 256.0f);
+	retVal.int_part = (uint8_t)(a >> 8);
 	retVal.frac_part = (uint8_t)(a);
 	return retVal;
 }
@@ -322,7 +321,7 @@ openThermResult_t OPENTHERM_SaveToMV(tMV *const pMV, uint32_t *const pmsg)
 		retVal = OPENTHERM_ResNoMVorSPS;
 		goto fExit;
 	}
-	tMV * pMV2;
+	tMV *pMV2;
 	/* define is one or two MVs are involved */
 	uint8_t usedMVs = (pt->msgDataType2 == none) ? 1u : 2u;
 	if (usedMVs == 2u) {
