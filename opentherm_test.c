@@ -653,8 +653,6 @@ static void OPENTHERM_WriteOnlyTest(void) {
 			}
 		}
 	}
-
-
 }
 
 
