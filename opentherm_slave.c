@@ -24,8 +24,8 @@
 	7.	Send
 */
 
+/* slave MV array */
 static tMV MV_array[MV_ARRAY_LENGTH];
-
 static tMV (*const ptMV_array)[MV_ARRAY_LENGTH] = &MV_array;
 
 /**

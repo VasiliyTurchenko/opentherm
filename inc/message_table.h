@@ -12,10 +12,13 @@
 #define MESSAGE_TABLE_H
 
 #include "opentherm_data_def.h"
+#include "CAssert.h"
 
 
-#define MSG_TBL_LENGTH	54
-#define MV_ARRAY_LENGTH	MSG_TBL_LENGTH
+/* total number of the opentherm messages id */
+#define MSG_TBL_LENGTH	(SINGLE_MV_MESSAGES + DOUBLE_MV_MESSAGES)
+
+#define MV_ARRAY_LENGTH	(SINGLE_MV_MESSAGES + DOUBLE_MV_MESSAGES * 2)
 
 /* exported variables */
 

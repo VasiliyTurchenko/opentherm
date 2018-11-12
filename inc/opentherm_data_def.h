@@ -94,6 +94,7 @@ typedef struct __attribute__((packed)) openThermFrame {
 } openThermFrame_t;
 
 typedef openThermFrame_t *openThermFrame_p;
+
 // clang-format off
 #define MSG_ID_STATUS           (uint8_t)0      /* R -  Status flag8 / flag8 Master and Slave Status flags. */
 #define MSG_ID_TSET             (uint8_t)1      /* - W TSet f8.8 Control setpoint ie CH water temperature setpoint (°C) */
@@ -102,14 +103,14 @@ typedef openThermFrame_t *openThermFrame_p;
 #define MSG_ID_COMMAND          (uint8_t)4      /* - W Command u8 / u8 Remote Command */
 #define MSG_ID_ASF_FLAGS        (uint8_t)5      /* R - ASF-flags / OEM-fault-code flag8 / u8 Application-specific fault flags and OEM fault code */
 #define MSG_ID_RBP_FLAGS        (uint8_t)6      /* R - RBP-flags flag8 / flag8 Remote boiler parameter transfer-enable & read/write flags */
-#define MSG_ID_COOLING_CONTROL  (uint8_t)7      /* - W Cooling-control f8.8 Cooling control signal (%) */
+#define MSG_ID_COOLING_CTRL	(uint8_t)7      /* - W Cooling-control f8.8 Cooling control signal (%) */
 #define MSG_ID_TSETCH2          (uint8_t)8      /* - W TsetCH2 f8.8 Control setpoint for 2e CH circuit (°C) */
 #define MSG_ID_OVERRIDE         (uint8_t)9      /* R - TrOverride f8.8 Remote override room setpoint */
 #define MSG_ID_TSP              (uint8_t)10     /* R - TSP u8 / u8 Number of Transparent-Slave-Parameters supported by slave */
 #define MSG_ID_TSP_INDEX        (uint8_t)11     /* R W TSP-index / TSP-value u8 / u8 Index number / Value of referred-to transparent slave parameter */
 #define MSG_ID_FHB_SIZE         (uint8_t)12     /* R - FHB-size u8 / u8 Size of Fault-History-Buffer supported by slave */
 #define MSG_ID_FHB_INDEX        (uint8_t)13     /* R - FHB-index / FHB-value u8 / u8 Index number / Value of referred-to fault-history buffer entry */
-#define MSG_ID_MAX_REL_MOD_LEV_SETTING  (uint8_t)14 /* - W Max-rel-mod-level-setting f8.8 Maximum relative modulation level setting (%) */
+#define MSG_ID_MAX_REL_MOD_L_SET  (uint8_t)14 /* - W Max-rel-mod-level-setting f8.8 Maximum relative modulation level setting (%) */
 #define MSG_ID_MAX_CAPACITY     (uint8_t)15     /* R - Max-Capacity / Min-Mod-Level u8 / u8 Maximum boiler capacity (kW) / Minimum boiler modulation level(%) */
 
 #define MSG_ID_TRSET            (uint8_t)16     /* - W TrSet f8.8 Room Setpoint (°C) */
@@ -149,11 +150,17 @@ typedef openThermFrame_t *openThermFrame_p;
 #define MSG_ID_CH_PUMP_OP_HOURS     (uint8_t)121    /* R W CH pump operation hours u16 Number of hours that CH pump has been running */
 #define MSG_ID_DHW_PUMP_OP_HOURS    (uint8_t)122    /* R W DHW pump/valve operation hours u16 Number of hours that DHW pump has been running or DHW valve has been opened */
 #define MSG_ID_DHW_BURNER_OP_HOURS  (uint8_t)123    /* R W DHW burner operation hours u16 Number of hours that burner is in operation during DHW mode */
-#define MSG_ID_OPENTHERM_VER_MASTER (uint8_t)124    /* - W OpenTherm version Master f8.8 The implemented version of the OpenTherm Protocol Specification in the master. */
-#define MSG_ID_OPENTHERM_VER_SLAVE  (uint8_t)125    /* R - OpenTherm version Slave f8.8 The implemented version of the OpenTherm Protocol Specification in the slave. */
+#define MSG_ID_OTH_VER_MASTER	    (uint8_t)124    /* - W OpenTherm version Master f8.8 The implemented version of the OpenTherm Protocol Specification in the master. */
+#define MSG_ID_OTH_VER_SLAVE	    (uint8_t)125    /* R - OpenTherm version Slave f8.8 The implemented version of the OpenTherm Protocol Specification in the slave. */
 #define MSG_ID_MASTER_VER           (uint8_t)126    /* - W Master-version u8 / u8 Master product version number and type */
 #define MSG_ID_SLAVE_VER            (uint8_t)127    /* R - Slave-version u8 / u8 Slave product version number and type */
 // clang-format on
+
+/** @warning	the 2 below defines must be corrected manually!
+  */
+#define	SINGLE_MV_MESSAGES	36
+#define	DOUBLE_MV_MESSAGES	18
+
 
 /* Messages template */
 typedef enum {
@@ -184,9 +191,15 @@ typedef struct __attribute__((packed)) opentThermMsg {
 	enum tMeas MV_Unit1; /* unit of measurements for 1st val */
 	enum tMeas MV_Unit2; /* unit of measurements for 2nd val */
 	union MV_Val
-		Lowest; /* Lowest permissible value (for quality, not for logic) */
+		Lowest_MV1; /* Lowest permissible value (for quality, not for logic) */
 	union MV_Val
-		Highest; /* Highest permissible value (for quality, not for logic) */
+		Highest_MV1; /* Highest permissible value (for quality, not for logic) */
+	union MV_Val
+		Lowest_MV2; /* Lowest permissible value (for quality, not for logic) */
+	union MV_Val
+		Highest_MV2; /* Highest permissible value (for quality, not for logic) */
+
+
 } opentThermMsg_t;
 
 /* result codes */

@@ -11,6 +11,8 @@
 #include "config.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+
 #include "opentherm.h"
 //#include "message_table.h"
 
@@ -35,8 +37,8 @@
 		process message with error
 */
 
+/* master MV array */
 static tMV MV_array[MV_ARRAY_LENGTH];
-
 static tMV (*const ptMV_array)[MV_ARRAY_LENGTH] = &MV_array;
 
 /**
@@ -53,7 +55,7 @@ openThermResult_t OPENTHERM_InitMaster() {
 
 /**
   * reads the slave
-  * @param pMV the pointer to the MV
+  * @param pMV the pointer to the MV. In case of double MV it must point at first of them.
   * @param commFun is a callback communication function
   * @return openThermResult_t
   */
@@ -78,12 +80,16 @@ openThermResult_t OPENTHERM_ReadSlave(tMV *const pMV,
 
 	/* the frame */
 	openThermFrame_t frame;
-	frame.byte1.msgType = MSG_TYPE_READ_DATA;
-	frame.dataID = pt->msgId;
-
 	/* recast */
 	uint32_t *pFrame;
 	pFrame = (uint32_t *)&frame;
+
+	CASSERT( (sizeof(frame) == sizeof (uint32_t)) , opentherm_master_c)
+
+	*pFrame = 0x00;
+
+	frame.byte1.msgType = MSG_TYPE_READ_DATA;
+	frame.dataID = pt->msgId;
 	if (CheckParity32(*pFrame) != 0) {
 		frame.byte1.parity = 1u;
 	}
@@ -127,7 +133,7 @@ fExit:
 
 /**
   * werites to the slave
-  * @param pMV the pointer to the MV
+  * @param pMV the pointer to the MV. In case of double MV it must point at first of them.
   * @param commFun is a callback communication function
   * @return openThermResult_t
   */
@@ -144,7 +150,7 @@ openThermResult_t OPENTHERM_WriteSlave(tMV *const pMV,
 		goto fExit;
 	}
 
-	/* can we read this dataId ?*/
+	/* can we write this dataId ?*/
 	if ((pt->msgMode != rw) && (pt->msgMode != wr)) {
 		retVal = OPENTHERM_ResBadMsgId;
 		goto fExit;

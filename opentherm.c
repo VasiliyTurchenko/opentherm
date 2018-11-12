@@ -17,9 +17,12 @@
 
 /* global variables */
 
-
 /* static functions prototypes */
 
+void initFloatMVFields(tMV *p);
+void initIntMVFields(tMV *p);
+void initSomeCommonMVFields(tMV *p);
+openThermResult_t updateMVQualAndChg(tMV *const pMV, union MV_Val oldVal);
 
 /**
   * @brief initializes the MV array by the data from MessageTable
@@ -34,40 +37,103 @@ int32_t OPENTHERM_InitMV(tMV (*const pMVArr)[], size_t MVArrLen)
 		return -1;
 	}
 
-	if (MVArrLen > MSG_TBL_LENGTH) {
-		MVArrLen = MSG_TBL_LENGTH;
-	}
+	size_t MVindex = 0u;
+	for (size_t msgcount = 0; msgcount < MSG_TBL_LENGTH; msgcount++) {
+		tMV *p = &(*pMVArr)[MVindex];
+		p->LD_ID = messagesTbl[msgcount].msgId;
 
-	for (size_t i = 0; i < MVArrLen; i++) {
-		// initialize only first MsgTblLength MVs
-		tMV *p = &(*pMVArr)[i];
-		p->LD_ID = messagesTbl[i].msgId;
-		p->Ctrl = No;
-		p->ValChanged = Yes;
-		p->TimeStamp = getTime();
-	/* QUALITY_VALIDITY_GOOD - not correct */
-		p->Quality = QUALITY_VALIDITY_GOOD;
-		if (messagesTbl[i].msgDataType1 == f88) {
-			p->MV_type = floatMV;
-			p->Val.fVal = 0.0;
-			p->MV_Unit = messagesTbl[i].MV_Unit1;
-			p->MV_Shift.fVal = 0.0f;
-			p->MV_Scale.fVal = 1.0f;
-			p->MV_Aperture.fVal = 0.0f;
-			p->Lowest.fVal = messagesTbl[i].Lowest.fVal;
-			p->Highest.fVal = messagesTbl[i].Highest.fVal;
+		initSomeCommonMVFields(p);
+
+		if (messagesTbl[msgcount].msgDataType1 == f88) {
+			initFloatMVFields(p);
+
+			p->MV_Unit = messagesTbl[msgcount].MV_Unit1;
+			p->Lowest.fVal = messagesTbl[msgcount].Lowest_MV1.fVal;
+			p->Highest.fVal =
+				messagesTbl[msgcount].Highest_MV1.fVal;
 		} else {
-			p->MV_type = intMV;
-			p->Val.iVal = 0;
-			p->MV_Unit = messagesTbl[i].MV_Unit1;
-			p->MV_Shift.iVal = 0;
-			p->MV_Scale.iVal = 1;
-			p->MV_Aperture.iVal = 0;
-			p->Lowest.iVal = messagesTbl[i].Lowest.iVal;
-			p->Highest.iVal = messagesTbl[i].Highest.iVal;
+			initIntMVFields(p);
+
+			p->MV_Unit = messagesTbl[msgcount].MV_Unit1;
+			p->Lowest.iVal = messagesTbl[msgcount].Lowest_MV1.iVal;
+			p->Highest.iVal =
+				messagesTbl[msgcount].Highest_MV1.iVal;
+		}
+		if (messagesTbl[msgcount].msgDataType2 != none) {
+			// 2 MVs will be initialized
+			MVindex++;
+			if (MVindex == MVArrLen) {
+				break;
+			}
+			// advance the pointer
+			p = &(*pMVArr)[MVindex];
+
+			p->LD_ID = messagesTbl[msgcount].msgId;
+			initSomeCommonMVFields(p);
+
+			if (messagesTbl[msgcount].msgDataType2 == f88) {
+				initFloatMVFields(p);
+
+				p->MV_Unit = messagesTbl[msgcount].MV_Unit2;
+				p->Lowest.fVal =
+					messagesTbl[msgcount].Lowest_MV2.fVal;
+				p->Highest.fVal =
+					messagesTbl[msgcount].Highest_MV2.fVal;
+			} else {
+				initIntMVFields(p);
+
+				p->MV_Unit = messagesTbl[msgcount].MV_Unit2;
+				p->Lowest.iVal =
+					messagesTbl[msgcount].Lowest_MV2.iVal;
+				p->Highest.iVal =
+					messagesTbl[msgcount].Highest_MV2.iVal;
+			}
+		}
+		MVindex++;
+		if (MVindex == MVArrLen) {
+			break;
 		}
 	}
 	return 0;
+}
+
+/**
+ * @brief initFloatMVfields
+ * @param p pointer to the MV to be initialized
+ */
+void initFloatMVFields(tMV *p)
+{
+	p->MV_type = floatMV;
+	p->Val.fVal = 0.0;
+	p->MV_Shift.fVal = 0.0f;
+	p->MV_Scale.fVal = 1.0f;
+	p->MV_Aperture.fVal = 0.0f;
+}
+
+/**
+ * @brief initIntMVValues
+ * @param p pointer to the MV to be initialized
+ */
+void initIntMVFields(tMV *p)
+{
+	p->MV_type = intMV;
+	p->Val.iVal = 0;
+	p->MV_Shift.iVal = 0;
+	p->MV_Scale.iVal = 1;
+	p->MV_Aperture.iVal = 0;
+}
+
+/**
+ * @brief initSomeCommonMVFields
+ * @param p pointer to the MV to be initialized
+ */
+void initSomeCommonMVFields(tMV *p)
+{
+	p->Ctrl = No;
+	p->ValChanged = Yes;
+	p->TimeStamp = getTime();
+	/* QUALITY_VALIDITY_GOOD - not correct */
+	p->Quality = QUALITY_VALIDITY_GOOD;
 }
 
 // stub function
@@ -76,8 +142,8 @@ tTime getTime(void)
 	tTime retVal;
 	struct timespec spec;
 	clock_gettime(CLOCK_REALTIME, &spec);
-	retVal.Seconds = spec.tv_sec;
-	retVal.mSeconds = spec.tv_nsec / 1000000u;
+	retVal.Seconds = (uint32_t)spec.tv_sec;
+	retVal.mSeconds = (uint32_t)spec.tv_nsec / 1000000u;
 	return retVal;
 }
 
@@ -139,7 +205,7 @@ int CheckParity32(uint32_t val)
 
 /**
   * Puts data from MV to the data field(s) to the message
-  * @param pMV pointer to the MV
+  * @param pMV pointer to the MV - in case of 2 MVs pMV must point to the first one
   * @param pmsg pointer to the message
   * @return openThermResult_t as result
   */
@@ -164,11 +230,25 @@ openThermResult_t OPENTHERM_PutDataToMsg(tMV *const pMV, uint32_t *const pmsg)
 
 	outFrame->dataID = pMV->LD_ID;
 
+	/* define is one or two MVs are involved */
+	uint8_t usedMVs = (pt->msgDataType2 == none) ? 1u : 2u;
+
+	/* second MV --> second byte (word) */
+	/* advance pointer  */
+	tMV *const pMV2 = pMV + 1;
+	if (usedMVs == 2u) {
+		/* there is a possible pitfall !*/
+		if (pMV->LD_ID != pMV2->LD_ID) {
+			/* bad MV provided - not a pair */
+			retVal = OPENTHERM_ResNoMVorSPS;
+			goto fExit;
+		}
+	}
+	/* first MV ---> first byte (word) */
 	if (pMV->MV_type == intMV) {
 		switch (pt->msgDataType1) {
 		case u8:
 		case fl8:
-		case none:
 			outFrame->dataVal.dataValueBU.dataByte1 =
 				(uint8_t)pMV->Val.iVal;
 			break;
@@ -183,21 +263,8 @@ openThermResult_t OPENTHERM_PutDataToMsg(tMV *const pMV, uint32_t *const pmsg)
 		case s16:
 			outFrame->dataVal.dataValueS16 = (int16_t)pMV->Val.iVal;
 			break;
-		case f88:
-			break;
-		}
-
-		/* 2nd byte goes */
-		switch (pt->msgDataType2) {
-		case u8:
-		case fl8:
-		case none:
-			outFrame->dataVal.dataValueBU.dataByte2 =
-				(uint8_t)(pMV->Val.iVal >> 8u);
-			break;
-		case s8:
-			outFrame->dataVal.dataValueBS.dataByte2 =
-				(int8_t)(pMV->Val.iVal / 256);
+		default:
+			retVal = OPENTHERM_ResBadArg;
 			break;
 		}
 	} else {
@@ -206,13 +273,37 @@ openThermResult_t OPENTHERM_PutDataToMsg(tMV *const pMV, uint32_t *const pmsg)
 	if (pMV->Quality != QUALITY_VALIDITY_GOOD) {
 		retVal = OPENTHERM_ResDataInvalid;
 	}
+	if (usedMVs == 2u) {
+		if (pMV2->MV_type == intMV) {
+			switch (pt->msgDataType2) {
+			case u8:
+			case fl8:
+				outFrame->dataVal.dataValueBU.dataByte2 =
+					(uint8_t)pMV2->Val.iVal;
+				break;
+			case s8:
+				outFrame->dataVal.dataValueBS.dataByte2 =
+					(int8_t)pMV2->Val.iVal;
+				break;
+			default:
+				retVal = OPENTHERM_ResBadArg;
+				break;
+			}
+		} else {
+			/* no float 8.8 can be in the 2nd MV */
+			retVal = OPENTHERM_ResBadArg;
+		}
+		if (pMV2->Quality != QUALITY_VALIDITY_GOOD) {
+			retVal = OPENTHERM_ResDataInvalid;
+		}
+	}
 fExit:
 	return retVal;
 }
 
 /**
   * deserializes data from the opentherm frame (message)
-  * @param pMV pointer to the target MV
+  * @param pMV pointer to the target MV - in the case of 2MVs pMV must point at first of them
   * @param pmsg pointer to the message
   * @return openThermResult_t serialization status
   */
@@ -231,72 +322,130 @@ openThermResult_t OPENTHERM_SaveToMV(tMV *const pMV, uint32_t *const pmsg)
 		retVal = OPENTHERM_ResNoMVorSPS;
 		goto fExit;
 	}
+	tMV * pMV2;
+	/* define is one or two MVs are involved */
+	uint8_t usedMVs = (pt->msgDataType2 == none) ? 1u : 2u;
+	if (usedMVs == 2u) {
+		pMV2 = pMV + 1;
+		/* there is a possible pitfall !*/
+		if (pMV->LD_ID != pMV2->LD_ID) {
+			/* bad MV provided - not a pair */
+			retVal = OPENTHERM_ResNoMVorSPS;
+			goto fExit;
+		}
+	}
 
 	pMV->TimeStamp = getTime();
 
 	openThermFrame_t *const frame = (openThermFrame_t *)pmsg;
 
 	/* decode payload */
-	/* separate 2 byte data */
-	float oldFVal = 0.0f;
-	int32_t oldIVal = 0;
-	switch (pt->msgDataType1) {
-	case f88:
-		oldFVal = pMV->Val.fVal;
+	union MV_Val oldVal;
+	union MV_Val oldVal2;
+	oldVal.iVal = 0;
+	oldVal2.iVal = 0;
+
+	if (pt->msgDataType1 == f88) {
+		oldVal.fVal = pMV->Val.fVal;
 		pMV->Val.fVal = F88ToFloat(frame->dataVal.dataValueF88);
-		break;
-	case s16:
-		oldIVal = pMV->Val.iVal;
-		pMV->Val.iVal = (int16_t)frame->dataVal.dataValueS16;
-		break;
-	case u8:
-	case s8:
-	case fl8:
-	case u16:
-		oldIVal = pMV->Val.iVal;
-		pMV->Val.iVal = (int16_t)frame->dataVal.dataValueU16;
-		break;
-	default:
-		retVal = OPENTHERM_ResBadArg;
-		break;
+	} else {
+		oldVal.iVal = pMV->Val.iVal;
+
+		switch (pt->msgDataType1) {
+		case s16:
+			pMV->Val.iVal = (int32_t)frame->dataVal.dataValueS16;
+			break;
+		case u16:
+			pMV->Val.iVal = (int32_t)frame->dataVal.dataValueU16;
+			break;
+		case u8:
+		case fl8:
+			pMV->Val.iVal =
+				(int32_t)frame->dataVal.dataValueBU.dataByte1;
+			break;
+		case s8:
+			pMV->Val.iVal =
+				(int32_t)frame->dataVal.dataValueBS.dataByte1;
+			break;
+		default:
+			retVal = OPENTHERM_ResBadArg;
+			break;
+		}
+	}
+	/* second MV */
+	if (usedMVs == 2u) {
+		pMV2->TimeStamp = getTime();
+		oldVal2.fVal = pMV->Val.fVal;
+		switch (pt->msgDataType2) {
+		case u8:
+		case fl8:
+			pMV2->Val.iVal =
+				(int32_t)frame->dataVal.dataValueBU.dataByte2;
+			break;
+		case s8:
+			pMV2->Val.iVal =
+				(int32_t)frame->dataVal.dataValueBS.dataByte2;
+			break;
+		default:
+			retVal = OPENTHERM_ResBadArg;
+			break;
+		}
 	}
 
 	if (retVal == OPENTHERM_ResOK) {
 		/* is val changed ? */
-		if (pMV->MV_type == floatMV) {
-			float diff = pMV->Val.fVal - oldFVal;
-			diff = (diff < 0.0f) ? -diff : diff;
-			pMV->ValChanged =
-				(diff > pMV->MV_Aperture.fVal) ? Yes : No;
-		} else {
-			int32_t diff = pMV->Val.iVal - oldIVal;
-			diff = (diff < 0) ? -diff : diff;
-			pMV->ValChanged =
-				(diff > pMV->MV_Aperture.iVal) ? Yes : No;
-		}
-
 		/* check ranges */
-		if (pMV->MV_type == floatMV) {
-			if ( (pMV->Val.fVal >= pMV->Lowest.fVal) &&
-			    (pMV->Val.fVal <= pMV->Highest.fVal) ) {
-				pMV->Quality = QUALITY_VALIDITY_GOOD;
-			} else {
-				pMV->Quality = (QUALITY_VALIDITY_INVALID |
-						QUALITY_DETAIL_OUT_OF_RANGE);
-				retVal = OPENTHERM_ResDataInvalid;
-			}
-		} else {
-			if ( (pMV->Val.iVal >= pMV->Lowest.iVal) &&
-			    (pMV->Val.iVal <= pMV->Highest.iVal) ) {
-				pMV->Quality = QUALITY_VALIDITY_GOOD;
-			} else {
-				pMV->Quality = (QUALITY_VALIDITY_INVALID |
-						QUALITY_DETAIL_OUT_OF_RANGE);
-				retVal = OPENTHERM_ResDataInvalid;
-			}
+		retVal = updateMVQualAndChg(pMV, oldVal);
+
+		if (usedMVs == 2u) {
+			retVal = (updateMVQualAndChg(pMV2, oldVal2) ==
+				  OPENTHERM_ResDataInvalid) ?
+					 OPENTHERM_ResDataInvalid :
+					 retVal;
 		}
 	}
 fExit:
+	return retVal;
+}
+
+/**
+ * @brief updateMVQualAndChg
+ * @param pMV pointer to MV to be updated
+ * @param oldVal old value for comparison
+ * @return OPENTHERM_ResDataInvalid | OPENTHERM_ResOk
+ */
+openThermResult_t updateMVQualAndChg(tMV *const pMV, union MV_Val oldVal)
+{
+	openThermResult_t retVal = OPENTHERM_ResOK;
+
+	if (pMV->MV_type == floatMV) {
+		float diff = pMV->Val.fVal - oldVal.fVal;
+		diff = (diff < 0.0f) ? -diff : diff;
+		pMV->ValChanged = (diff > pMV->MV_Aperture.fVal) ? Yes : No;
+	} else {
+		int32_t diff = pMV->Val.iVal - oldVal.iVal;
+		diff = (diff < 0) ? -diff : diff;
+		pMV->ValChanged = (diff > pMV->MV_Aperture.iVal) ? Yes : No;
+	}
+	if (pMV->MV_type == floatMV) {
+		if ((pMV->Val.fVal >= pMV->Lowest.fVal) &&
+		    (pMV->Val.fVal <= pMV->Highest.fVal)) {
+			pMV->Quality = QUALITY_VALIDITY_GOOD;
+		} else {
+			pMV->Quality = (QUALITY_VALIDITY_INVALID |
+					QUALITY_DETAIL_OUT_OF_RANGE);
+			retVal = OPENTHERM_ResDataInvalid;
+		}
+	} else {
+		if ((pMV->Val.iVal >= pMV->Lowest.iVal) &&
+		    (pMV->Val.iVal <= pMV->Highest.iVal)) {
+			pMV->Quality = QUALITY_VALIDITY_GOOD;
+		} else {
+			pMV->Quality = (QUALITY_VALIDITY_INVALID |
+					QUALITY_DETAIL_OUT_OF_RANGE);
+			retVal = OPENTHERM_ResDataInvalid;
+		}
+	}
 	return retVal;
 }
 
