@@ -51,21 +51,21 @@ typedef struct __attribute__((packed)) f88 {
 } f88_t;
 
 /* flag8 byte composed of 8 single-bit flags */
-typedef struct __attribute__((packed)) flag8 {
-	uint8_t bit0 : 1;
-	uint8_t bit1 : 1;
-	uint8_t bit2 : 1;
-	uint8_t bit3 : 1;
-	uint8_t bit4 : 1;
-	uint8_t bit5 : 1;
-	uint8_t bit6 : 1;
-	uint8_t bit7 : 1;
-} flag8_t;
+//typedef struct __attribute__((packed)) flag8 {
+//	uint8_t bit0 : 1;
+//	uint8_t bit1 : 1;
+//	uint8_t bit2 : 1;
+//	uint8_t bit3 : 1;
+//	uint8_t bit4 : 1;
+//	uint8_t bit5 : 1;
+//	uint8_t bit6 : 1;
+//	uint8_t bit7 : 1;
+//} flag8_t;
 
-typedef struct __attribute__((packed)) dataValueFlags {
-	flag8_t flags1;
-	flag8_t flags2;
-} dataValueFlags;
+//typedef struct __attribute__((packed)) dataValueFlags {
+//	flag8_t flags1;
+//	flag8_t flags2;
+//} dataValueFlags;
 
 /*
   * @brief  OpenTherm frame
@@ -89,7 +89,7 @@ typedef struct __attribute__((packed)) openThermFrame {
 		uint16_t dataValueU16;
 		int16_t dataValueS16;
 		f88_t dataValueF88;
-		dataValueFlags dataValueFl;
+//		dataValueFlags dataValueFl;
 	} dataVal;
 } openThermFrame_t;
 
