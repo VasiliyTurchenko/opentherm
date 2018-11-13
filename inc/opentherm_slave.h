@@ -13,8 +13,16 @@
 
 #include "opentherm_data_def.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 openThermResult_t OPENTHERM_InitSlave(void);
 
 openThermResult_t OPENTHERM_SlaveRespond(uint32_t msg, uint32_t (*commFun)(uint32_t), tMV* (*GetMV)(uint8_t));
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // OPENTHERM_SLAVE_H

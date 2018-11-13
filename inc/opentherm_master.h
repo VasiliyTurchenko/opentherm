@@ -13,10 +13,18 @@
 
 #include "opentherm_data_def.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 openThermResult_t OPENTHERM_InitMaster(void);
 
 openThermResult_t OPENTHERM_ReadSlave(tMV *const pMV, uint32_t (*commFun)(uint32_t));
 
 openThermResult_t OPENTHERM_WriteSlave(tMV *const pMV, uint32_t (*commFun)(uint32_t));
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // OPENTHERM_MASTER_H

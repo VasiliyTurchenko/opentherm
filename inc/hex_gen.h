@@ -12,6 +12,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Exported functions --------------------------------------------------------
 
 int HexGen16(const char *src, unsigned short int addr, char len,
@@ -23,6 +27,10 @@ void uint32_to_asciiz(uint32_t num, char *result_string); // 09-12-2017
 void uint16_to_asciiz(uint16_t num, char *result_string); // 09-12-2017
 void uint8_to_asciiz(uint8_t num, char *result_string);   // 09-12-2017
 void int32_to_asciiz(int32_t num, char *result_string);   // 01-04-2018
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

@@ -14,6 +14,14 @@
 #include <stdint.h>
 #include "opentherm_daq_def.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 uint8_t * ConvertMVToJSON(tMV *pMV);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // OPENTHERM_JSON_H

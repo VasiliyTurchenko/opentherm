@@ -11,6 +11,14 @@
 #ifndef OPENTHERM_TEST_H
 #define OPENTHERM_TEST_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void run_opentherm_test(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // OPENTHERM_TEST_H

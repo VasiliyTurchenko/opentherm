@@ -15,6 +15,10 @@
 #include "opentherm_version.h"
 #include "opentherm_daq_def.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define OPENTHERM_STANDART_MAJOR 2
 #define OPENTHERM_STANDART_MINOR 2
 
@@ -214,5 +218,10 @@ typedef enum {
 	OPENTHERM_ResNoMVorSPS,   /* no MV or SPS configured for the msgId*/
 	OPENTHERM_ResNullPtr,     /* null ptr given as arg */
 } openThermResult_t;
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif // OPENTHERM_DATA_DEF_H

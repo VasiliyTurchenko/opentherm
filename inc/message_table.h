@@ -14,6 +14,9 @@
 #include "opentherm_data_def.h"
 #include "CAssert.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* total number of the opentherm messages id */
 #define MSG_TBL_LENGTH	(SINGLE_MV_MESSAGES + DOUBLE_MV_MESSAGES)
@@ -27,5 +30,10 @@ extern const opentThermMsg_t (*const pMessageTbl)[MSG_TBL_LENGTH];
 
 /* exported functions */
 const opentThermMsg_t *GetMessageTblEntry(const uint8_t msgId);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* MESSAGE_TABLE_H */

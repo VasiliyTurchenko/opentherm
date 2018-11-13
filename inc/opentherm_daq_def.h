@@ -15,6 +15,10 @@
 #include <stdbool.h>
 #include <limits.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define LD_NAME_MAX_LEN (uint8_t)0x07
 #undef USE_LD_NAMES_INSTEAD_OF_IDS
 
@@ -176,5 +180,10 @@ typedef struct _tMV {
 typedef tMV *ptr_MV;
 
 #define tMV_size sizeof(tMV)
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif // OPENTHERM_DAQ_DEF_H

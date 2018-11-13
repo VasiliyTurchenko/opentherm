@@ -17,6 +17,10 @@
 #include "message_table.h"
 #include "opentherm_data_def.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Functions prototypes
 */
@@ -49,5 +53,10 @@ extern const opentThermMsg_t (*const pMessageTbl)
 	[MSG_TBL_LENGTH]; /* constant ptr to the message table array */
 
 extern const opentThermMsg_t messagesTbl[MSG_TBL_LENGTH];
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif // OPENTHERM_H
