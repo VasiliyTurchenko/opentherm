@@ -59,6 +59,9 @@ int32_t OPENTHERM_InitMV(tMV (*const pMVArr)[], size_t MVArrLen)
 			p->Highest.iVal =
 				messagesTbl[msgcount].Highest_MV1.iVal;
 		}
+
+		p->Ctrl = (messagesTbl[msgcount].msgMode == rd) ? No : Yes;
+
 		if (messagesTbl[msgcount].msgDataType2 != none) {
 			// 2 MVs will be initialized
 			MVindex++;
@@ -67,6 +70,8 @@ int32_t OPENTHERM_InitMV(tMV (*const pMVArr)[], size_t MVArrLen)
 			}
 			// advance the pointer
 			p = &(*pMVArr)[MVindex];
+
+			p->Ctrl = (messagesTbl[msgcount].msgMode == rd) ? No : Yes;
 
 			p->LD_ID = messagesTbl[msgcount].msgId;
 			initSomeCommonMVFields(p);
@@ -129,11 +134,11 @@ void initIntMVFields(tMV *p)
  */
 void initSomeCommonMVFields(tMV *p)
 {
-	p->Ctrl = No;
 	p->ValChanged = Yes;
 	p->TimeStamp = getTime();
 	/* QUALITY_VALIDITY_GOOD - not correct */
 	p->Quality = QUALITY_VALIDITY_GOOD;
+	p->ReportType = GI;
 }
 
 // stub function

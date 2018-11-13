@@ -25,6 +25,8 @@
 #include "opentherm_master.h"
 #include "opentherm_slave.h"
 
+#include "opentherm_json.h"
+
 /**
   * @brief states for test communication emulation
   */
@@ -45,13 +47,14 @@ static void checkMVs(void);
 static void init_MVArrays(void);
 
 /* full circuit test */
-static void OPENTHERM_WriteSlave_ReadSlave_Test(void);
+static void OPENTHERM_WriteSlave_ReadSlave_test(void);
 static uint32_t Master_CommFun(uint32_t message);
 static tMV *GetSlaveMV(uint8_t LdId);
 static void fullCircuitTest(uint8_t msgId, union MV_Val val, union MV_Val val2);
 
-static void OPENTHERM_ReadOnlyTest(void);
-static void OPENTHERM_WriteOnlyTest(void);
+static void OPENTHERM_ReadOnly_test(void);
+static void OPENTHERM_WriteOnly_test(void);
+static void OPENTHERM_JSON_test(void);
 
 /* auxiliary functions */
 void PrintMVInfo(tMV *const pMV);
@@ -87,9 +90,10 @@ void run_opentherm_test(void)
 	OPENTHERM_OPENTHERM_SaveToMV_Errors_test();
 	OPENTHERM_PutDataToMsg_test();
 
-	OPENTHERM_WriteSlave_ReadSlave_Test();
-	OPENTHERM_ReadOnlyTest();
-	OPENTHERM_WriteOnlyTest();
+	OPENTHERM_WriteSlave_ReadSlave_test();
+	OPENTHERM_ReadOnly_test();
+	OPENTHERM_WriteOnly_test();
+	OPENTHERM_JSON_test();
 
 	printf("%s\n", "opentherm_test finished...");
 }
@@ -317,14 +321,13 @@ static void OPENTHERM_PutDataToMsg_test()
 /**
  * @brief OPENTHERM_WriteSlave_Test
  */
-static void OPENTHERM_WriteSlave_ReadSlave_Test(void)
+static void OPENTHERM_WriteSlave_ReadSlave_test(void)
 {
 	char *testName = "OPENTHERM_WriteSlave_ReadSlave_Test";
 	printf(">>>>>>>>> %s started...\n", testName);
 
 	init_MVArrays();
 
-	/* test with {.msgId = MSG_ID_YEAR, rw, u16, u16,   4u, Unnamed,  Unnamed,  .Lowest.iVal = 1900,.Highest.iVal = 2100}	*/
 	union MV_Val testVal;
 	union MV_Val testVal2;
 	testVal2.iVal = 0;
@@ -376,7 +379,7 @@ static void OPENTHERM_WriteSlave_ReadSlave_Test(void)
 /**
  * @brief readOnlyTest tests reading of the slave RO msgIds
  */
-static void OPENTHERM_ReadOnlyTest(void)
+static void OPENTHERM_ReadOnly_test(void)
 {
 	char *testName = "OPENTHERM_ReadOnlyTest";
 	printf(">>>>>>>>> %s started...\n", testName);
@@ -478,7 +481,7 @@ static void OPENTHERM_ReadOnlyTest(void)
 /**
  * @brief OPENTHERM_WriteOnlyTest
  */
-static void OPENTHERM_WriteOnlyTest(void)
+static void OPENTHERM_WriteOnly_test(void)
 {
 	char *testName = "OPENTHERM_WriteOnlyTest";
 	printf(">>>>>>>>> %s started...\n", testName);
@@ -775,4 +778,25 @@ int MV_Val_cmp(enum tVal t, union MV_Val *val1, union MV_Val *val2,
 				0 :
 				1);
 	}
+}
+
+/**
+ * @brief OPENTHERM_JSON_test tests JSON output
+ */
+static void OPENTHERM_JSON_test(void){
+
+	char *testName = "OPENTHERM_JSON_test";
+	printf(">>>>>>>>> %s started...\n", testName);
+
+	/*using Slave_MV_array */
+	init_MVArrays();
+
+	for (size_t i = 0; i < MV_ARRAY_LENGTH; i++) {
+
+		tMV * pMV = &Slave_MV_array[i];
+		char * outs = (char*)ConvertMVToJSON(pMV);
+		printf("%s\n", outs);
+
+	}
+
 }

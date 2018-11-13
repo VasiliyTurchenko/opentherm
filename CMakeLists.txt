@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 project(opentherm)
 message(${CMAKE_CURRENT_SOURCE_DIR})
 
+add_subdirectory(tests)
+
 # The version number.
 set (opentherm_VERSION_MAJOR 0)
 set (opentherm_VERSION_MINOR 0)
@@ -36,6 +38,8 @@ add_executable(${PROJECT_NAME} main.c
 #				opentherm_simulator.c
                                 message_table.c
 				opentherm_master.c
-				opentherm_slave.c)
+				opentherm_slave.c
+				hex_gen.c
+				ftoa.c)
 target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_FILES_DIR})
 
